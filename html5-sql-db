@@ -1,0 +1,189 @@
+var fac= function(){
+    //web sql database 对象
+    this.dbcontainer = {};
+    this.dbcontainer.webdb = {};
+    this.dbcontainer.webdb.db = null;
+
+    this.dbcontainer.webdb.open = function () {
+
+        if (!window.openDatabase) {
+
+            alert('database is not supported in this browser!');
+
+            return;
+        }
+
+        var dbsize = 10 * 1024 * 1024; //10M
+
+        this.db = openDatabase("database", "1", "data base", dbsize);
+    }
+}
+
+//向地区填写控件添加autocomplete JS效果
+fac.prototype.DistrictAutoComplete = function () {
+
+    var dbcontainer = this.dbcontainer;
+
+    var district_audit = function (message) {
+
+        console.log(message.item.id + ":" + message.item.name + message.item.value);
+
+    };
+
+    this.$autoWidget.autocomplete({  
+       
+        source: function (q, process) {   
+
+            if (!q) {
+
+                console.log("sorry, the query character is missing!");
+                return;
+            }
+
+            var icoll = [];  //查询结果数组
+            
+            dbcontainer.webdb.open();  //打开 web 数据库
+
+            var db = dbcontainer.webdb.db; //获取 database 对象
+
+            q.term = q.term.toUpperCase(); //查询关键字变成大写;
+
+            q.termr = q.term.split('').join('(\\w*\\])?(\\[\\w*)?'); //(\\w*\\])?(\\[\\w*)?  //大写转换后拼成规则表达式;如 H(\\w*\\])?(\\[\\w*)?N
+
+            q.termr = q.termr + '(\\w*\\])?(\\[\\w*)?';//(\\S\\w*)?最后一个字符补充一个规则表达式
+           
+            db.transaction(function (tx) { 
+
+                tx.executeSql("select id,label,value from districtList", // where label REGEXP ?  //or label like '%" + q.term + "%' limit 15
+
+                    [],//q.termr
+
+                    function (tx, r) {  //when sql success
+
+                        //遍历全部数据
+                        for (var i = 0; i < r.rows.length; i++) {
+
+                            //匹配搜索结果
+                            if (new RegExp(q.termr,'g').test( decodeURIComponent(r.rows.item(i)['label']) ))
+                            {
+                                icoll.push({
+
+                                    'id': r.rows.item(i)['id'],
+
+                                    'label': decodeURIComponent(r.rows.item(i)['label']),
+
+                                    'value': decodeURIComponent(r.rows.item(i)['value'])
+
+                                });
+                            }
+                        }
+                        process(icoll);
+                    },
+
+                    function (tx,message) {  //when sql fail
+
+                        console.log(message); // print the error info
+                    });
+
+            });
+
+        },
+        minLength: 1, //多少字符发起查询请求
+        select: function (event, ui) {
+
+            district_audit(ui);
+
+        }
+    });
+
+};
+
+//将地市区信息写入到本地html5数据库中
+faq.prototype.InitLocalWebDB = function () {
+
+    if (!window.openDatabase) {
+        
+        alert('database is not supported in this browser!');
+
+        return;
+    }
+
+    var dbcontainer = this.dbcontainer;
+    
+    this.dbcontainer.webdb.onError = function (tx, e) {
+
+        alert("error::" + e.message);
+    }
+    
+    this.dbcontainer.webdb.insertOnSuccess = function (tx, r) {
+
+        console.log(r.rows.length);
+    };
+
+    this.dbcontainer.webdb.insertOnError = function (tx, eup) {
+
+        console.log("error::" + eup.message)
+    }
+
+    this.dbcontainer.webdb.onSuccess = function (tx, r) {
+
+        if (r.rows.item(0)["t"] > 1) { //本地数据库中已存储有数据
+
+            return;
+
+        } else {
+
+            var tdata = [];
+
+            $.ajax({
+                url: "/Express/GetDistrictExt_NC",
+                dataType: "json"
+            })
+            .done(function (data) {
+
+                if (data.length > 0) {
+
+                    //var tstr = ("Insert into districtList values " + tdata.join("; Insert into districtList values"));
+
+                    //tx.executeSql(tstr); //批量执行 sql
+                    
+                    dbcontainer.webdb.open();//打开webdb
+
+                    dbcontainer.webdb.db.transaction(function (tx) {
+
+                        $(data).each(function (i, d) {
+
+                            tx.executeSql("insert into districtList values (?,?,?);", [d.id,d.label,d.value],
+                               dbcontainer.webdb.insertOnSuccess , dbcontainer.webdb.insertOnError );
+
+                        });
+
+                    });
+
+                };
+
+            })
+            .fail(function (error) {
+
+                console.log(" sorry , db is down out~~~ ");
+
+            });
+
+
+        }
+        //dbcontainer.webdb.getAllItems();
+    }
+
+    this.dbcontainer.webdb.open();//写web sql database 数据执行入口;
+
+    var db = this.dbcontainer.webdb.db;
+
+    db.transaction(function (tx) {
+
+        tx.executeSql("Create Table if not Exists districtList (id integer not null primary key,label nvarchar not null,value nvarchar not null); ")
+        tx.executeSql("Select count(1) as t from districtList;",
+            [], dbcontainer.webdb.onSuccess,
+            dbcontainer.webdb.onError);
+
+    });
+};
