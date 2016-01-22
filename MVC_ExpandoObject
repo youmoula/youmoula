@@ -1,0 +1,13 @@
+                List<ExpandoObject> joinData = new List<ExpandoObject>();
+                foreach (var item in ecoll)
+                {
+                    IDictionary<string, object> itemExpando = new ExpandoObject();
+                    foreach (PropertyDescriptor property in
+                             TypeDescriptor.GetProperties(item.GetType()))
+                    {
+                        itemExpando.Add(property.Name, property.GetValue(item));
+                    }
+                    joinData.Add(itemExpando as ExpandoObject);
+                }
+
+                response.list = joinData;
