@@ -1,0 +1,34 @@
+1. Directly accessing the service through logon Windows user account.
+2. Accessing the service through IIS using Network Service account.
+
+
+ServiceController service = new ServiceController(SERVICE_NAME);
+
+//Start the service
+if (service.Status == ServiceControllerStatus.Stopped)
+{
+      service.Start();
+      service.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(10.0));
+}
+
+//Stop the service
+if (service.Status == ServiceControllerStatus.Running)
+{
+      service.Stop();
+      service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10.0));
+}
+
+C:/>sc sdshow <SERVICE_NAME>
+
+Output of this will be something like this:
+=============================================
+D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)
+
+D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)
+
+sc sdset <SERVICE_NAME> "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)(A;;RPWPCR;;;S-1-5-21-2103278432-2794320136-1883075150-1000)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"
+
+2. Access through IIS Method
+
+sc sdset <SERVICE_NAME> "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)(A;;RPWPCR;;;NS)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"
+
