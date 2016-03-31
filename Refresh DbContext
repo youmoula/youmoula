@@ -1,0 +1,15 @@
+var context = ((IObjectContextAdapter)myDbContext).ObjectContext;
+var refreshableObjects = (from entry in context.ObjectStateManager.GetObjectStateEntries(
+                                           EntityState.Added
+                                           | EntityState.Deleted
+                                           | EntityState.Modified
+                                           | EntityState.Unchanged)
+                          where entry.EntityKey != null
+                          select entry.Entity).ToList();
+
+context.Refresh(RefreshMode.StoreWins, refreshableObjects);
+
+And I prefer the following:
+
+var refreshableObjects = myDbContext.ChangeTracker.Entries().Select(c=>c.Entity).ToList();
+context.Refresh(RefreshMode.StoreWins, refreshableObjects);
