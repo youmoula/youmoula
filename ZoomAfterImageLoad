@@ -1,0 +1,14 @@
+	var imagepath = "";
+  $img =  $("<img/>").attr("src",imagepath);
+	$img.one("load",function(){
+		$("#imageFullScreen").attr("src", $img.attr("src"))
+		$('#imageFullScreen').smartZoom({'containerClass': 'zoomableContainer' });
+		$('#zoomIn,#zoomOut').unbind('click').bind('click', function () {
+			var scaleToAdd = 0.1;
+			if ($(this).attr('id') == 'zoomOut')
+				scaleToAdd = -scaleToAdd;
+			$('#imageFullScreen').smartZoom('zoom', scaleToAdd);
+		});
+	}).each(function() {
+		if(this.complete) $(this).load();
+	});
