@@ -1,4 +1,5 @@
-	var imagepath = "";
+
+  var imagepath = "";
   $img =  $("<img/>").attr("src",imagepath);
 	$img.one("load",function(){
 		$("#imageFullScreen").attr("src", $img.attr("src"))
