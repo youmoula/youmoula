@@ -1,0 +1,7 @@
+ python manage.py makemigrations [appname] 
+ python manage.py migrate[appname]
+ 
+ 
+ $ python manage.py createsuperuser --username=joe --email=joe@example.com
+ 
+ $ python manage.py runserver
