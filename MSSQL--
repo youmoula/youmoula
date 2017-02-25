@@ -1,0 +1,27 @@
+declare @LockRequestResult int
+begin tran
+exec @LockRequestResult = sp_getapplock @Resource = 'QueueUpdate', @LockMode = 'Exclusive', @LockOwner = 'Transaction'
+if @LockRequestResult >= 0
+Begin -- now own lock
+ select 
+ @contactid = ISNULL(q.contactid,0) 
+ from 
+ QueueTable q with (<strong>rowlock</strong>)
+ where 
+ InQueue=1 and Status=0
+ order by 
+ IsPriority asc, dateupdated desc 	
+ 
+ 
+	if(@contactid>0)
+	-- an item was found in the queue.. take it out of the queue and process it.
+	begin
+		update QueueTable set InQueue=0	where ContactID=@contactid	
+	-- QueueTable now updated, so give up lock
+	exec sp_releaseapplock @Resource = 'QueueUpdate', @LockOwner = 'Transaction'
+	
+		-- query to get the queue record
+		select	* from 	QueueTable where contactId = @contactid
+
+	end
+commit tran
