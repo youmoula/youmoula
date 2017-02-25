@@ -1,0 +1,6 @@
+update A set Aid = 2 where Aid = 1 
+select @@ROWCOUNT
+if(@@rowcount = 0)
+begin 
+  rollback
+end
