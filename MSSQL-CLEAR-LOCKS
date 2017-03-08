@@ -1,0 +1,46 @@
+Declare @DbName nvarchar(60)='DATABASE_NAME'  
+Declare @SPID int  
+
+--get all processes  
+DECLARE @Table TABLE(  
+    SPID INT,  
+    Status VARCHAR(MAX),  
+    LOGIN VARCHAR(MAX),  
+    HostName VARCHAR(MAX),  
+    BlkBy VARCHAR(MAX),  
+    DBName VARCHAR(MAX),  
+    Command VARCHAR(MAX),  
+    CPUTime INT,  
+    DiskIO INT,  
+    LastBatch VARCHAR(MAX),  
+    ProgramName VARCHAR(MAX),  
+    SPID_1 INT,  
+    REQUESTID INT  
+)  
+
+INSERT INTO @Table EXEC sp_who2  
+--using cursor to kill all processes  
+Declare cur_KillAllProcesses CURSOR FAST_FORWARD FOR  
+Select   
+SPID  
+From @Table  
+WHERE DBName=@DbName  
+OPEN cur_KillAllProcesses  
+
+FETCH NEXT FROM cur_KillAllProcesses INTO   
+@SPID  
+
+WHILE @@FETCH_STATUS=0  
+BEGIN  
+
+--add kill process command  
+
+Exec('KILL '+ @SPID)  --WITH STATUSONLY
+
+
+FETCH NEXT FROM cur_KillAllProcesses INTO @SPID  
+
+END  
+
+CLOSE cur_KillAllProcesses  
+DEALLOCATE cur_KillAllProcesses  
