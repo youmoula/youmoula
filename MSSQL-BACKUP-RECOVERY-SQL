@@ -1,0 +1,28 @@
+---------BACKUP----------------
+
+DBCC TRACEON (3605, -1) 
+DBCC TRACEON (3213, -1) 
+
+BACKUP DATABASE [DBDemo] TO 
+    DISK = N'F:\Database Backup\DB_backup_000.bak'
+WITH 
+    NOFORMAT, INIT, NAME = N'AdventureWorks2008-Full Database Backup', 
+    SKIP, NOREWIND, NOUNLOAD, COMPRESSION, STATS = 10 
+
+DBCC TRACEOFF(3605, -1) 
+DBCC TRACEOFF(3213, -1)
+
+---------RECOVERY----------------
+
+DBCC traceon(3605, 3004, 3014, 3213,-1)
+go
+RESTORE DATABASE [xDemo]
+FROM  
+  DISK = N'F:\Database Backup\DB_backup_000.bak'
+WITH 
+MOVE 'DATABASE' TO 'E:\MSSQL\DBDemo.mdf',
+MOVE 'DATABASE_log' TO 'E:\MSSQL\DBDemo_log.ldf',  NOUNLOAD,  REPLACE
+, BUFFERCOUNT = 2200
+GO
+DBCC traceoff(3605, 3004, 3014, 3213,-1)
+GO
