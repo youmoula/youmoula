@@ -1,0 +1,86 @@
+  exec sp_lock 167;
+  
+  exec sp_who 'active';
+  
+  exec sp_who2 68 ;
+  
+ 
+  kill 53
+  kill 69
+  kill 170
+  
+  select   request_session_id   spid,OBJECT_NAME(resource_associated_entity_id) tableName   
+from   sys.dm_tran_locks where resource_type='OBJECT';
+
+select convert(varchar(30), suser_sname(p.sid)) as login,
+       convert (smallint, req_spid) As spid,
+       convert(varchar(30), db_name(rsc_dbid)) As db_name,
+       case rsc_dbid when db_id()
+            then convert(varchar(30), object_name(rsc_objid))
+            else convert(varchar(30), rsc_objid) end As Object,
+       rsc_indid As indid,
+       substring (lock_type.name, 1, 4) As Type,
+       substring (lock_mode.name, 1, 12) As Mode,
+       substring (lock_status.name, 1, 5) As Status,
+       substring (rsc_text, 1, 16) as Resource,
+       lock_status.name
+   from master..syslockinfo s
+   join master..spt_values lock_type on s.rsc_type = lock_type.number
+   join master..spt_values lock_status on s.req_status = lock_status.number
+   join master..spt_values lock_mode on s.req_mode = lock_mode.number -1
+   join master..sysprocesses p on s.req_spid = p.spid
+   where lock_type.type = 'L'
+     and lock_status.type = 'L'
+     and lock_mode.type = 'L'
+     and db_name(rsc_dbid) in ('DB_NAME')
+     --and substring (lock_status.name, 1, 5) = 'wait'
+order by spid, lock_type.number
+go
+
+declare @spid  int 
+Set @spid  = 56 --锁表进程
+declare @sql varchar(1000)
+set @sql='kill '+cast(@spid  as varchar)  --WITH STATUSONLY
+exec(@sql)
+
+exec('kill 163')
+exec ('kill 52');
+exec ('kill 54');
+exec ('kill 57');
+exec ('kill 58');
+exec ('kill 162');
+
+
+--查看日志占用--
+ DBCC SQLPERF(logspace)
+ 
+ SELECT  session_id
+ ,blocking_session_id
+ ,wait_time
+ ,wait_type
+ ,last_wait_type
+ ,wait_resource
+ ,transaction_isolation_level
+ ,lock_timeout
+FROM sys.dm_exec_requests
+--WHERE blocking_session_id <> 0
+GO
+
+
+SELECT
+     blocking_session_id AS BlockingSessionID,
+     session_id AS VictimSessionID,
+     (SELECT [text] FROM sys.sysprocesses
+      CROSS APPLY sys.dm_exec_sql_text([sql_handle])
+      WHERE spid = blocking_session_id) AS BlockingQuery,
+    
+     [text] AS VictimQuery,
+     wait_time/1000 AS WaitDurationSecond,
+     wait_type AS WaitType,
+     percent_complete AS BlockingQueryCompletePercent
+FROM sys.dm_exec_requests
+CROSS APPLY sys.dm_exec_sql_text([sql_handle])
+ WHERE blocking_session_id > 0
+
+
+select * from MarkAnalysis_HS.sys.dm_os_performance_counters where object_name = 'SQLServer:Locks' and counter_name = 'Number of Deadlocks/sec';
