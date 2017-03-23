@@ -1,0 +1,9 @@
+SELECT @@SPID;
+
+SELECT * 
+  FROM sys.dm_exec_requests WHERE session_id = 50;
+
+SELECT 
+percent_complete
+FROM sys.dm_exec_requests
+--where session_id=50 or command like 'restore%'
