@@ -1,0 +1,5 @@
+    var queue = new createjs.LoadQueue(false); --- crossdomain init LoadQueue(false);
+    var stage = new createjs.Stage($canvas[0]);
+
+    queue.installPlugin(stage);
+    queue.on("complete", handleComplete, this);
