@@ -1,0 +1,102 @@
+ //--CONNECTIONS--
+ System.Data.Common.DbConnectionStringBuilder
+  var entityBuilder =  new EntityConnectionStringBuilder();
+
+  entityBuilder.Provider = "System.Data.SqlClient";
+  entityBuilder.ProviderConnectionString = "Server=.;Initial Catalog=DB_LOCAL;Integrated Security=True";
+  
+  
+  //--GEN--
+  
+  EdmGen is .NET utility located in "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\EdmGen.exe". 
+  Copy it to "the same" directory and create "EdmGen.exe.config" file with the following content:
+  
+  <configuration>
+    <system.data>
+        <DbProviderFactories>
+            <remove invariant="System.Data.SQLite" />
+            <add name="SQLite Data Provider"
+                invariant="System.Data.SQLite"
+                description=".NET Framework Data Provider for SQLite"
+                type="System.Data.SQLite.SQLiteFactory, System.Data.SQLite" />
+        </DbProviderFactories>
+    </system.data>
+</configuration>  
+
+Now create "gen.bat" file with the following command:
+EdmGen.exe /mode:fullgeneration /c:"Data Source=Blog.sqlite" /provider:System.Data.SQLite /entitycontainer:Blog /project:Blog /language:CSharp
+
+
+For the test, in Visual Studio go to properties of "Blog.sqlite" and set "Copy to Output Directory" parameter value to "Copy always". 
+This option will copy empty database from project into compilation directory and you always will have empty database for every application run from VS.
+
+The go to properties of schema files "Blog.csdl", "Blog.msl", "Blog.ssdl" and set "Build action" to "Embedded Resource" for each file. 
+This puts them into application resources so that Entity Framework could load them.
+
+For the test, in Visual Studio go to properties of "Blog.sqlite" and set "Copy to Output Directory" parameter value to "Copy always". This option will copy empty database from project into compilation directory and you always will have empty database for every application run from VS.
+
+The go to properties of schema files "Blog.csdl", "Blog.msl", "Blog.ssdl" and set "Build action" to "Embedded Resource" for each file. This puts them into application resources so that Entity Framework could load them.
+The last thing is left. Right click on project in Solution Explorer and choose "Manage NuGet Packages...". Click "Online" in left panel and type "sqlite" in top right search field. Install "System.Data.SQLite (x86/x64)" package. This will change "app.config" file. And it will change it wrong!
+You have to reorder some string to get them in the following way (note the order of "remove" and "add" tags):
+
+<DbProviderFactories>
+    <remove invariant="System.Data.SQLite" />
+    <add name="SQLite Data Provider" invariant="System.Data.SQLite" description=".NET Framework Data Provider for SQLite" type="System.Data.SQLite.SQLiteFactory, System.Data.SQLite" />
+    <remove invariant="System.Data.SQLite.EF6" />
+    <add name="SQLite Data Provider (Entity Framework 6)" invariant="System.Data.SQLite.EF6" description=".NET Framework Data Provider for SQLite (Entity Framework 6)" type="System.Data.SQLite.EF6.SQLiteProviderFactory, System.Data.SQLite.EF6" />
+</DbProviderFactories>
+
+Remember CSDL, SSDL and MSL schemas was added into resources. It's time to use them. EF needs a connection string that specifies all the things such as schemas, database source and data provider. Schemas are being added in resources with full name, 
+for example "EF_SQLite_Example.DAL.Blog.csdl" for CSDL in this project. Add the following connection string in "app.config":
+
+<connectionStrings>
+    <add name="Blog"
+        connectionString="metadata=res://*/EF_SQLite_Example.DAL.Blog.csdl|res://*/EF_SQLite_Example.DAL.Blog.ssdl|res://*/EF_SQLite_Example.DAL.Blog.msl;provider=System.Data.SQLite;provider connection string=&quot;data source=./Data/Blog.sqlite&quot;"
+        providerName="System.Data.EntityClient" />
+</connectionStrings>
+
+Where "res://" means that schema will be taken from resources, and "*" means "current application". It's also can be written this way:
+
+<connectionStrings>
+    <add name="Blog"
+        connectionString="metadata=res://*/;provider=System.Data.SQLite;provider connection string=&quot;data source=./Data/Blog.sqlite&quot;"
+        providerName="System.Data.EntityClient" />
+</connectionStrings>
+
+            using (var ctx = new Blog.Blog(connectionString))
+            {
+                var post = new Posts
+                {
+                    Created = DateTime.UtcNow,
+                    Text = "Example of post in this blog.",
+                };
+
+                var comment1 = new Comments
+                {
+                    Created = DateTime.UtcNow,
+                    Text = "Comment 1 for the post.",
+                };
+                var comment2 = new Comments
+                {
+                    Created = DateTime.UtcNow,
+                    Text = "Comment 2 for the post.",
+                };
+                
+                post.Comments.Add(comment1);
+                post.Comments.Add(comment2);
+
+                ctx.Posts.AddObject(post);
+
+                ctx.SaveChanges();
+
+                Console.WriteLine("Post: Id = {0}", post.Id);
+                Console.WriteLine("Comment 1: Id = {0}, PostId = {1}", comment1.Id, comment1.PostId);
+                Console.WriteLine("Comment 2: Id = {0}, PostId = {1}", comment2.Id, comment2.PostId);
+            }
+
+
+
+  
+  
+  
+  
