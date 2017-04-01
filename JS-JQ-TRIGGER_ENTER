@@ -9,3 +9,5 @@ try {
     //
 }
 };
+
+setTimeout("x",500);
