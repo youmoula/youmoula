@@ -1,0 +1,8 @@
+SET IDENTITY_Insert APPTABLE ON    
+INSERT APPTABLE(ID,APPNAME) values(1,'APP001')    
+SET IDENTITY_Insert APPTABLE OFF   
+
+SELECT 
+PERCENT_COMPLETE
+FROM SYS.DM_EXEC_REQUESTS
+--where session_id=50 or command like 'restore%'
