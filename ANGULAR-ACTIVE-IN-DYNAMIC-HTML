@@ -1,4 +1,5 @@
-
+##ANGULAR MODULE NGAPP,CONTROLLER NGCONTROLLER
+`
 var scope = angular.element($(".ngcontroller")).scope();
 
 
@@ -7,4 +8,4 @@ angular.element($("#ngapp")).injector().invoke(function($compile) {
   $compile($(".ngcontroller").contents())(scope);
   scope.$apply();
 });
-
+`
