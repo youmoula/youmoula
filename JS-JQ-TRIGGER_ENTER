@@ -1,0 +1,11 @@
+var x = function(){
+try {
+    var e = $.Event("keydown", { which: 13 });
+    var $p = $(".input");
+    $p.val("0");
+    $p.trigger("keyup");
+    $p.trigger(e);
+} catch (e) {
+    //
+}
+};
