@@ -1,4 +1,4 @@
-{
+=skdkd=
     var scope = angular.element($(".ngcontroller")).scope();
 
 
@@ -7,4 +7,4 @@
       $compile($(".ngcontroller").contents())(scope);
       scope.$apply();
     });
-}
+
