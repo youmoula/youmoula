@@ -16,7 +16,7 @@ DBCC TRACEOFF(3213, -1)
 
 DBCC traceon(3605, 3004, 3014, 3213,-1)
 go
-RESTORE DATABASE [xDemo]
+RESTORE DATABASE [DBDemo]
 FROM  
   DISK = N'F:\Database Backup\DB_backup_000.bak'
 WITH 
