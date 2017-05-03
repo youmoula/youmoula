@@ -12,6 +12,23 @@ WITH
 DBCC TRACEOFF(3605, -1) 
 DBCC TRACEOFF(3213, -1)
 
+
+DECLARE @d varchar(128) = replace(CONVERT(varchar,CURRENT_TIMESTAMP),' ','');
+DECLARE @dsk varchar(256) = 'F:\Database Backup\DB_backup_'+@d+'.bak';
+DBCC TRACEON (3605, -1) 
+DBCC TRACEON (3213, -1) 
+
+BACKUP DATABASE [DBDemo] TO 
+    DISK = @dsk
+WITH 
+    NOFORMAT, INIT, NAME = N'AdventureWorks2008-Full Database Backup', 
+    SKIP, NOREWIND, NOUNLOAD, COMPRESSION, STATS = 10 
+
+DBCC TRACEOFF(3605, -1) 
+DBCC TRACEOFF(3213, -1)
+
+select CURRENT_TIMESTAMP
+
 ---------RECOVERY----------------
 
 DBCC traceon(3605, 3004, 3014, 3213,-1)
