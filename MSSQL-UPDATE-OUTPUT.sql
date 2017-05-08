@@ -9,6 +9,6 @@ declare @dt table(ID int,BID int,OID int,CNo varchar(20))
 	INTO @dt;
 	
 	select * from @dt;
-	
+	waitfor delay '0:0:5'
 	select * from sys.dm_tran_locks where request_session_id=@@spid
   commit tran
