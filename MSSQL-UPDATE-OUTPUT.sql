@@ -4,7 +4,7 @@ declare @dt table(ID int,BID int,OID int,CNo varchar(20))
 	set BID=10000
 	OUTPUT inserted.ID,
 	   inserted.BID,
-     deleted.BID,
+     	   deleted.BID,
 	   inserted.CNo
 	INTO @dt;
 	
